@@ -21,7 +21,8 @@ describe Amorail::Task do
       is_expected.to include(
         :text,
         :task_type,
-        :complete_till
+        :complete_till,
+        :is_completed
       )
     end
   end
@@ -31,7 +32,8 @@ describe Amorail::Task do
       described_class.new(
         text: 'Win the war',
         task_type: 'test',
-        complete_till: '2015-05-09 12:00:00'
+        complete_till: '2015-05-09 12:00:00',
+        is_completed: false
       )
     end
 
@@ -40,6 +42,7 @@ describe Amorail::Task do
     specify { is_expected.to include(:last_modified) }
     specify { is_expected.to include(text: 'Win the war') }
     specify { is_expected.to include(task_type: 'test') }
+    specify { is_expected.to include(is_completed: false) }
     specify {
       is_expected.to include(
         complete_till: Time.local(2015, 5, 9, 12, 0, 0).to_i

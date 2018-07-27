@@ -7,7 +7,7 @@ module Amorail
 
     amo_names 'tasks'
 
-    amo_field :task_type, :text, complete_till: :timestamp
+    amo_field :task_type, :text, complete_till: :timestamp, is_completed: :boolean
 
     validates :task_type, :text, :complete_till,
               presence: true
