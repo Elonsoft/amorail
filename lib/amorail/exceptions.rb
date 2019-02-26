@@ -1,25 +1,22 @@
 # Amorail Exceptions.
 # Every class is name of HTTP response error code(status)
 module Amorail
-  class Error < ::StandardError; end
+  # Internal exceptions
+  Error = Class.new(StandardError)
+  RecordNotFound = Class.new(Error)
+  InvalidRecord = Class.new(Error)
+  NotPersisted = Class.new(Error)
 
-  class APIError < Error; end
-
-  class AmoBadRequestError < APIError; end
-
-  class AmoMovedPermanentlyError < APIError; end
-
-  class AmoUnauthorizedError < APIError; end
-
-  class AmoForbiddenError < APIError; end
-
-  class AmoNotFoundError < APIError; end
-
-  class AmoInternalError < APIError; end
-
-  class AmoBadGatewayError < APIError; end
-
-  class AmoServiceUnaviableError < APIError; end
-
-  class AmoUnknownError < APIError; end
+  # API Exceptions
+  APIError = Class.new(Error)
+  AmoBadRequestError = Class.new(APIError)
+  AmoMovedPermanentlyError = Class.new(APIError)
+  AmoUnauthorizedError = Class.new(APIError)
+  AmoForbiddenError = Class.new(APIError)
+  AmoNotFoundError = Class.new(APIError)
+  AmoInternalError = Class.new(APIError)
+  AmoBadGatewayError = Class.new(APIError)
+  AmoServiceUnavailableError = Class.new(APIError)
+  AmoUnknownError = Class.new(APIError)
 end
+

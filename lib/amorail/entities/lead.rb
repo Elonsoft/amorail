@@ -1,25 +1,33 @@
 module Amorail
   # AmoCRM lead entity
-  class Lead < Amorail::Entity
-    amo_names "leads"
+  class Lead < Amorail::BaseEntity
+    include Taggable
 
-    amo_field :name, :price, :status_id, :pipeline_id, :tags
+    # --- Constants
+    AMO_ENTITY_CODE = 2
 
-    validates :name, :status_id, presence: true
+    # --- Entity name
+    amo_entity_endpoint 'leads'
 
-    def reload
-      @contacts = nil
-      super
-    end
+    # --- Attributes
+    amo_attribute :name
+    amo_attribute :sale
+    amo_attribute :status_id # TODO: Remove
+    amo_attribute :pipeline_id # TODO: Remove
 
-    # Return list of associated contacts
-    def contacts
-      fail NotPersisted if id.nil?
-      @contacts ||=
-        begin
-          links = Amorail::ContactLink.find_by_leads(id)
-          links.empty? ? [] : Amorail::Contact.find_all(links.map(&:contact_id))
-        end
-    end
+    # --- Relations
+    amo_has_many :contacts, as_array: true
+    amo_has_many :notes, polymorphic: true
+    amo_has_many :tasks, polymorphic: true
+
+    amo_belongs_to :user
+    amo_belongs_to :pipeline
+    amo_belongs_to :status
+
+    # --- Validations
+    validates :name, presence: true
+    validates :status_id, presence: true
+
+    # --- Instance methods
   end
 end

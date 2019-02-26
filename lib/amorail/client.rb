@@ -1,8 +1,3 @@
-require 'faraday'
-require 'faraday_middleware'
-require 'json'
-require 'active_support'
-
 module Amorail
   # Amorail http client
   class Client
@@ -10,13 +5,16 @@ module Amorail
 
     attr_reader :usermail, :api_key, :api_endpoint
 
+    # Initializes new Amorail client with default params from config.
     def initialize(api_endpoint: Amorail.config.api_endpoint,
                    api_key: Amorail.config.api_key,
                    usermail: Amorail.config.usermail)
+
       @api_endpoint = api_endpoint
       @api_key = api_key
       @usermail = usermail
-      @connect = Faraday.new(url: api_endpoint) do |faraday|
+
+      @connection = Faraday.new(url: api_endpoint) do |faraday|
         faraday.response :json, content_type: /\bjson$/
         faraday.use :instrumentation
         faraday.adapter Faraday.default_adapter
@@ -25,10 +23,6 @@ module Amorail
 
     def properties
       @properties ||= Property.new(self)
-    end
-
-    def connect
-      @connect || self.class.new
     end
 
     def authorize
@@ -42,22 +36,22 @@ module Amorail
       response
     end
 
-    def safe_request(method, url, params = {})
-      public_send(method, url, params)
+    def safe_request(method, name, params = {})
+      public_send(method, params[:url] || remote_url_for(name), params)
     rescue ::Amorail::AmoUnauthorizedError
       authorize
-      public_send(method, url, params)
+      public_send(method, params[:url] || remote_url_for(name), params)
     end
 
     def get(url, params = {})
-      response = connect.get(url, params) do |request|
+      response = connection.get(url, params) do |request|
         request.headers['Cookie'] = cookies if cookies.present?
       end
       handle_response(response)
     end
 
     def post(url, params = {})
-      response = connect.post(url) do |request|
+      response = connection.post(url) do |request|
         request.headers['Cookie'] = cookies if cookies.present?
         request.headers['Content-Type'] = 'application/json'
         request.body = params.to_json
@@ -69,33 +63,45 @@ module Amorail
 
     attr_accessor :cookies
 
+    def remote_url_for(name)
+      File.join(Amorail.config.api_path, name)
+    end
+
+    def connection
+      @connection || self.class.new
+    end
+
     def cookie_handler(response)
       self.cookies = response.headers['set-cookie'].split('; ')[0]
     end
 
-    def handle_response(response) # rubocop:disable all
+    def handle_response(response)
       return response if SUCCESS_STATUS_CODES.include?(response.status)
 
       case response.status
       when 301
-        fail ::Amorail::AmoMovedPermanentlyError
+        raise_exception(AmoMovedPermanentlyError, response)
       when 400
-        fail ::Amorail::AmoBadRequestError
+        raise_exception(AmoBadRequestError, response)
       when 401
-        fail ::Amorail::AmoUnauthorizedError
+        raise_exception(AmoUnauthorizedError, response)
       when 403
-        fail ::Amorail::AmoForbiddenError
+        raise_exception(AmoForbiddenError, response)
       when 404
-        fail ::Amorail::AmoNotFoundError
+        raise_exception(AmoNotFoundError, response)
       when 500
-        fail ::Amorail::AmoInternalError
+        raise_exception(AmoInternalError, response)
       when 502
-        fail ::Amorail::AmoBadGatewayError
+        raise_exception(AmoBadGatewayError, response)
       when 503
-        fail ::Amorail::AmoServiceUnaviableError
+        raise_exception(AmoServiceUnavailableError, response)
       else
-        fail ::Amorail::AmoUnknownError, response.body
+        raise_exception(AmoUnknownError, response)
       end
+    end
+
+    def raise_exception(klass, response)
+      raise(klass, body: response.body, status: response.status)
     end
   end
 end

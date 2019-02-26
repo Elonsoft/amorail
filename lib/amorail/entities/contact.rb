@@ -1,28 +1,25 @@
-require 'amorail/entities/leadable'
-
 module Amorail
   # AmoCRM contact entity
-  class Contact < Amorail::Entity
-    include Leadable
-    amo_names 'contacts'
+  class Contact < Amorail::BaseEntity
+    include Taggable
 
-    amo_field :name, :company_name, :linked_company_id
+    # --- Constants
+    AMO_ENTITY_CODE = 1
 
-    amo_property :email, enum: 'WORK'
-    amo_property :phone, enum: 'MOB'
-    amo_property :position
+    # --- Entity name
+    amo_entity_endpoint 'contacts'
 
+    # --- Attributes
+    amo_attribute :name
+    amo_attribute :company_name
+
+    # --- Relations
+    amo_has_many :leads
+    amo_has_many :tasks, polymorphic: true
+    amo_has_many :notes, polymorphic: true
+    amo_belongs_to :company, optional: true, foreign_key: :company_id
+
+    # --- Validations
     validates :name, presence: true
-
-    # Clear company cache
-    def reload
-      @company = nil
-      super
-    end
-
-    def company
-      return if linked_company_id.nil?
-      @company ||= Amorail::Company.find(linked_company_id)
-    end
   end
 end

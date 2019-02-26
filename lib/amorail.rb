@@ -1,14 +1,32 @@
-require 'amorail/version'
-require 'amorail/config'
-require 'amorail/client'
-require 'amorail/exceptions'
-require 'amorail/entity'
-require 'amorail/property'
+require 'active_model'
+require 'active_support'
+require 'faraday'
+require 'faraday_middleware'
+require 'json'
 
-Gem.find_files('amorail/entities/*.rb').each { |path| require path }
+require_relative 'amorail/client'
+require_relative 'amorail/config'
+require_relative 'amorail/exceptions'
+require_relative 'amorail/version'
+require_relative 'amorail/property'
 
-# AmoCRM API integration.
-# https://www.amocrm.com/
+require_relative 'amorail/base_entity/attributes'
+require_relative 'amorail/base_entity/persistence'
+require_relative 'amorail/base_entity/finders'
+require_relative 'amorail/base_entity/class_methods'
+require_relative 'amorail/base_entity/relations'
+require_relative 'amorail/base_entity'
+
+require_relative 'amorail/entities/concerns/taggable'
+require_relative 'amorail/entities/company'
+require_relative 'amorail/entities/contact'
+require_relative 'amorail/entities/custom_field'
+require_relative 'amorail/entities/lead'
+require_relative 'amorail/entities/pipeline_status'
+require_relative 'amorail/entities/pipeline'
+require_relative 'amorail/entities/task'
+require_relative 'amorail/entities/note'
+
 module Amorail
   def self.config
     @config ||= Config.new
@@ -44,6 +62,4 @@ module Amorail
 
     attr_accessor :client
   end
-
-  require 'amorail/railtie' if defined?(Rails)
 end
