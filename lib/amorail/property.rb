@@ -6,11 +6,11 @@ require_relative 'property/task'
 
 module Amorail
   class Property # :nodoc: all
-    API_ENDPOINT_URL = '/private/api/v2/json/accounts/current'.freeze
+    API_ENDPOINT_URL = '/api/v2/account?with=custom_fields,users,pipelines,note_types,task_types'.freeze
 
     attr_reader :data
     attr_reader :contacts
-    attr_reader :company
+    attr_reader :companies
     attr_reader :leads
     attr_reader :tasks
 
@@ -21,7 +21,7 @@ module Amorail
 
     def reload
       fetch_account_data
-      parse_entities
+      parse_custom_fields_info
     end
 
     def inspect
@@ -32,14 +32,16 @@ module Amorail
 
     def fetch_account_data
       response = @client.safe_request(:get, nil, url: API_ENDPOINT_URL)
-      @data = response.body['response']['account']
+      @data = response.body
     end
 
-    def parse_entities
-      @contacts = Contact.parse(data)
-      @company = Company.parse(data)
-      @leads = Lead.parse(data)
-      @tasks = Task.parse(data)
+    def parse_custom_fields_info
+      custom_fields = data.dig('_embedded', 'custom_fields') || {}
+
+      @contacts = Contact.parse(custom_fields)
+      @companies = Company.parse(custom_fields)
+      @leads = Lead.parse(custom_fields)
+      @tasks = Task.parse(custom_fields)
     end
   end
 end

@@ -42,7 +42,7 @@ module Amorail
         return false unless valid?
 
         attributes.each_pair do |key, value|
-          public_send("#{key}=".to_sym, value) if self.class.attributes.keys.include?(key)
+          public_send("#{key}=".to_sym, value) if allowed_keys.include?(key)
         end
 
         return save if new_record?

@@ -43,7 +43,7 @@ module Amorail
           end
 
           if name.is_a?(Array)
-            name.each {|n| attributes[n] = type}
+            name.each { |n| attributes[n] = type }
             attr_accessor(*name)
           else
             attributes[name] = type
@@ -51,9 +51,14 @@ module Amorail
           end
         end
 
-        def amo_custom_field(name, options = {})
-          custom_fields[name] = options
-          attr_accessor(name)
+        def amo_custom_field(attribute_name, amo_name:, value_options: {})
+          custom_fields[attribute_name] = {
+            amo_name: amo_name.to_s.downcase,
+            options: value_options
+          }
+          custom_fields_mapping[amo_name] = attribute_name
+
+          attr_accessor(attribute_name)
         end
 
         def attributes
@@ -62,6 +67,10 @@ module Amorail
 
         def custom_fields
           @custom_fields ||= superclass.respond_to?(:custom_fields) ? superclass.custom_fields.dup : {}
+        end
+
+        def custom_fields_mapping
+          @custom_fields_mapping ||= superclass.respond_to?(:custom_fields_mapping) ? superclass.custom_fields_mapping.dup : {}
         end
       end
     end

@@ -9,7 +9,6 @@ module Amorail # :nodoc: all
           update: 'update',
         }.freeze
 
-        # Why not to call this as attributes?
         def attributes
           data = {}
 
@@ -18,33 +17,35 @@ module Amorail # :nodoc: all
           self.class.attributes.each do |key, type|
             data[key] = send("to_#{type}", send(key))
           end
-          data[:unlink] = removed_links
-          # data[:custom_fields] = custom_fields if properties.respond_to?(amo_name)
+          data[:unlink] = build_removed_links
+          data[:custom_fields] = build_custom_fields if Amorail.properties.respond_to?(amo_name)
 
           normalize_params(data).compact
         end
 
         protected
 
-        # TODO: How it works?
-        def custom_fields
-          # WTF: ???
-          custom_fields_hash = properties.send(self.class.amo_name)
-
-          # WTF???
+        def build_custom_fields
+          custom_fields_hash = Amorail.properties.send(self.class.amo_name)
           custom_fields = []
 
-          # WTF???
-          self.class.custom_fields.each do |key, value|
-            property_id = custom_fields_hash.send(key).id
-            property_value = {value: send(key)}.merge(value)
-            custom_fields << {id: property_id, values: [property_value]}
+          # Iterate over custom fields and retrieve
+          self.class.custom_fields.each do |attribute_name, attribute_options|
+            custom_field_name = attribute_options[:amo_name] || attribute_name
+            custom_field_id = custom_fields_hash[custom_field_name].id
+            custom_field_enums = custom_fields_hash[custom_field_name]['enums']
+
+            custom_field_value = {
+              value: public_send(attribute_name),
+              enum: custom_field_enums&.key(attribute_options[:options][:enum])
+            }.compact
+            custom_fields << { id: custom_field_id, values: [custom_field_value] }
           end
 
           custom_fields
         end
 
-        def removed_links
+        def build_removed_links
           ids_to_remove = {}
 
           self.class.relations[:regular_has_many].keys.each do |relation_name|
@@ -76,7 +77,7 @@ module Amorail # :nodoc: all
             when Array
               compact_array = value.compact
               compact_array = normalize_custom_fields(compact_array) if key == :custom_fields
-              normalized_params[key] = compact_array.map {|el| normalize_params(el)} unless compact_array.empty?
+              normalized_params[key] = compact_array.map { |el| normalize_params(el) } unless compact_array.empty?
             else
               params = normalize_params(value)
               normalized_params[key] = params unless params.nil?
@@ -89,7 +90,7 @@ module Amorail # :nodoc: all
         # What is normalize? Why we should do this?
         def normalize_custom_fields(val)
           val.reject do |field|
-            field[:values].all? {|item| !item[:value]}
+            field[:values].all? { |item| !item[:value] }
           end
         end
 

@@ -5,7 +5,6 @@ module Amorail
   # :id, :request_id, :responsible_user_id, :created_at, :updated_at
   class BaseEntity
     # Includes
-    include ActiveModel::Model
     include ActiveModel::Validations
 
     include Amorail::Entities::Attributes
@@ -26,7 +25,9 @@ module Amorail
     delegate :custom_fields, to: Amorail
 
     def initialize(attributes = {})
-      super(attributes)
+      attributes.each_pair do |key, value|
+        public_send("#{key}=".to_sym, value) if allowed_keys.include?(key)
+      end
     end
 
     def merge_attributes(attributes)
@@ -37,6 +38,10 @@ module Amorail
     end
 
     private
+
+    def allowed_keys
+      self.class.attributes.keys + self.class.custom_fields.keys
+    end
 
     def transform_related_entities(attributes)
       related_entities = self.class.relations[:regular_has_many].keys
@@ -62,7 +67,10 @@ module Amorail
       return if fields.nil?
 
       fields.each do |field|
-        field_name = field['code'] || field['name']
+        amo_field_name = field['code'] || field['name']
+        next if amo_field_name.nil?
+
+        field_name = self.class.custom_fields_mapping[amo_field_name.downcase]
         next if field_name.nil?
 
         field_name = "#{field_name.downcase}="

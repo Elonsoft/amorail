@@ -22,7 +22,14 @@ module Amorail
 
         def parse(data)
           hash = {}
-          data['custom_fields'].fetch(source_name, []).each do |contact|
+
+          # HACK: If there are no custom fields for entity then amoCRM sends an empty array insted of empty hash, e.g.
+          # "leads" => { "777" => { ...} } - there are some custom fields for leads
+          # "consumers" => [] - there are no fields for consumers
+          # So then we need to implement something like this...
+          fields = data.fetch(source_name, {}).presence&.values || []
+
+          fields.each do |contact|
             identifier = contact['code'].presence || contact['name'].presence
             next if identifier.nil?
 
