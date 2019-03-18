@@ -57,12 +57,17 @@ module Amorail # :nodoc: all
         def load_many_records(response)
           return [] if response.status == 204
 
+          return [] if response.body.presence.nil?
+
           data = response.body.dig('_embedded', 'items') || []
-          data.map {|attributes| new.merge_attributes(attributes)}
+          data.map { |attributes| new.merge_attributes(attributes) }
         end
 
         def load_single_record(id)
           response = client.safe_request(:get, amo_name, id: id)
+
+          return if response.body.presence.nil?
+
           attributes = response.body.dig('_embedded', 'items').first
           return if attributes.nil?
 

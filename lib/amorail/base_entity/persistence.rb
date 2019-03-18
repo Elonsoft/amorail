@@ -4,13 +4,13 @@ module Amorail
       extend ActiveSupport::Concern
 
       class_methods do
-        def create(attributes)
-          instance = new(attributes)
+        def create(attrs)
+          instance = new(attrs)
           instance.save
         end
 
-        def create!(attributes)
-          create(attributes) || fail(InvalidRecord)
+        def create!(attrs)
+          create(attrs) || fail(InvalidRecord)
         end
       end
 
@@ -37,12 +37,12 @@ module Amorail
         save || fail(InvalidRecord)
       end
 
-      def update(attributes = {})
+      def update(attrs = {})
         return false if self.class.readonly?
         return false unless valid?
 
-        attributes.each_pair do |key, value|
-          public_send("#{key}=".to_sym, value) if allowed_keys.include?(key)
+        attrs.each_pair do |key, value|
+          public_send("#{key}=".to_sym, value) if allowed_keys.include?(key.to_sym)
         end
 
         return save if new_record?

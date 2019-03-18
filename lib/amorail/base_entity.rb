@@ -26,7 +26,7 @@ module Amorail
 
     def initialize(attributes = {})
       attributes.each_pair do |key, value|
-        public_send("#{key}=".to_sym, value) if allowed_keys.include?(key)
+        public_send("#{key}=".to_sym, value) if allowed_keys.include?(key.to_sym)
       end
     end
 
@@ -107,7 +107,9 @@ module Amorail
       relations = self.class.relations[:regular_has_many].keys
       old_attributes = attributes
       relations.each do |relation_name|
-        instance_variable_set("@source_#{relation_name}_id", old_attributes["#{relation_name}_id"] || [])
+        ids = old_attributes["#{relation_name}_id"]
+        old_attributes["#{relation_name}_id"] = ids = ids.split(',').map(&:to_i) if ids.is_a?(String)
+        instance_variable_set("@source_#{relation_name}_id", ids || [])
       end
       merge_attributes(old_attributes.merge(data))
     rescue InvalidRecord

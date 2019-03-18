@@ -9,6 +9,12 @@ module Amorail # :nodoc: all
           update: 'update',
         }.freeze
 
+        def assign_attributes(attrs = {})
+          attrs.each_pair do |key, value|
+            public_send("#{key}=".to_sym, value) if allowed_keys.include?(key.to_sym)
+          end
+        end
+
         def attributes
           data = {}
 
@@ -32,6 +38,10 @@ module Amorail # :nodoc: all
           # Iterate over custom fields and retrieve
           self.class.custom_fields.each do |attribute_name, attribute_options|
             custom_field_name = attribute_options[:amo_name] || attribute_name
+
+            # Skip if there is no custom attribute
+            next if custom_fields_hash[custom_field_name].nil?
+
             custom_field_id = custom_fields_hash[custom_field_name].id
             custom_field_enums = custom_fields_hash[custom_field_name]['enums']
 
