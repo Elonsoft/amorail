@@ -22,7 +22,7 @@ module Amorail
     validates :text, presence: true
     validates :complete_till, presence: true
 
-    validates :task_type, inclusion: { in: lambda { allowed_task_types } }
+    # validates :task_type, inclusion: { in: lambda { allowed_task_types } }
 
     # --- Instance methods
 
