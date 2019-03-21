@@ -12,7 +12,7 @@ module Amorail
     amo_attribute :task_type
     amo_attribute :text
     amo_attribute :is_completed
-    amo_attribute :complete_till, type: :timestamp
+    amo_attribute :complete_till_at, type: :timestamp
 
     # --- Relations
     amo_belongs_to :element, polymorphic_to: ['Amorail::Company', 'Amorail::Contact', 'Amorail::Lead']
@@ -20,7 +20,7 @@ module Amorail
     # --- Validations
     validates :task_type, presence: true
     validates :text, presence: true
-    validates :complete_till, presence: true
+    validates :complete_till_at, presence: true
 
     # validates :task_type, inclusion: { in: lambda { allowed_task_types } }
 
