@@ -7,6 +7,7 @@ module Amorail
     # --- Attributes
     amo_attribute :note_type
     amo_attribute :text
+    amo_attribute :params
     amo_attribute :element_id # TODO: Remove
     amo_attribute :element_type # TODO: Remove
 
