@@ -23,7 +23,7 @@ module Amorail # :nodoc: all
           self.class.attributes.each do |key, type|
             data[key] = send("to_#{type}", send(key))
           end
-          data[:unlink] = build_removed_links
+          data[:unlink] = build_removed_links.presence
           data[:custom_fields] = build_custom_fields if Amorail.properties.respond_to?(amo_name)
 
           normalize_params(data).compact
@@ -61,7 +61,8 @@ module Amorail # :nodoc: all
           self.class.relations[:regular_has_many].keys.each do |relation_name|
             source_ids = instance_variable_get("@source_#{relation_name}_id") || []
             current_ids = instance_variable_get("@#{relation_name}_id") || []
-            ids_to_remove["#{relation_name}_id"] = source_ids - current_ids
+            diff = source_ids - current_ids
+            ids_to_remove["#{relation_name}_id"] = diff if diff.count.positive?
           end
 
           ids_to_remove

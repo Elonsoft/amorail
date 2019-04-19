@@ -14,7 +14,7 @@ module Amorail
     amo_attribute :company_name
 
     # --- Relations
-    amo_has_many :leads
+    amo_has_many :leads, as_array: true
     amo_has_many :tasks, polymorphic: true
     amo_has_many :notes, polymorphic: true
     amo_belongs_to :company, optional: true, foreign_key: :company_id
