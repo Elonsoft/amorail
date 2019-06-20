@@ -37,9 +37,11 @@ module Amorail
     end
 
     def safe_request(method, name, params = {})
+      retries ||= 0
       public_send(method, params[:url] || remote_url_for(name), params)
     rescue ::Amorail::AmoUnauthorizedError
       authorize
+      retry if (retries += 1) < 3
       public_send(method, params[:url] || remote_url_for(name), params)
     end
 
